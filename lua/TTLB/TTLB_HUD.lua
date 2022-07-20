@@ -42,6 +42,6 @@ hook.Add("HUDPaint", "TTLB_HUD", function()
 		local hpfrac = TTLB.GetBodyPartHealthFraction(LocalPlayer(), bpname)
 		surface.SetMaterial(bpmats[bpname])
 		surface.SetDrawColor( (hpfrac <= 0 and clr_dead) or LerpColor(hpfrac, clr_wounded, clr_healthy) )
-		surface.DrawTexturedRect(0 + bs, h - bs * aspect, bs, bs * aspect)
+		surface.DrawTexturedRect(50, h - bs * aspect - 50, bs, bs * aspect)
 	end
 end)

@@ -5,7 +5,7 @@ end)
 
 hook.Add("EntityTakeDamage", "TTLB_HandleGenericDamage", function(ply, info)
 	if ply:IsPlayer() then
-		
+		TTLB.DamageBodyPart(ply, 0, info)
 		return true
 	end
 end)

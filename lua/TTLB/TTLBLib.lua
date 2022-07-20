@@ -31,6 +31,13 @@ TTLB.Attributes = {
 	}
 }
 
+TTLB.GenericHandlers = {
+	[4] = function(info)
+		if info:GetAttacker():GetClass() == "npc_antlionguard" then return {1, 2, 3, 4, 5} end
+		return {2}
+	end
+}
+
 local BodyParts = {
 	"Head", "Chest", "Stomach", "RArm", "LArm", "RLeg", "LLeg"
 }
@@ -66,8 +73,18 @@ end
 function TTLB.DamageBodyPart(ply, bp, info, extra)
 	if type(bp) == "number" then bp = {bp} end
 	for _, bpnum in pairs(bp) do
-		local bpname, bphp = TTLB.GetBodyPartByHitgroup(ply, bpnum)
-		ply:SetNW2Int("TTLB_"..bpname.."HP", math.Approach(bphp, 0, info:GetDamage()))
+		if bpnum == 0 then
+			local genericaffected = (TTLB.GenericHandlers[info:GetDamageType()] and TTLB.GenericHandlers[info:GetDamageType()](info))
+			if genericaffected then
+				for _, bpnumgeneric in pairs(genericaffected) do
+					local bpname, bphp = TTLB.GetBodyPartByHitgroup(ply, bpnumgeneric)
+					ply:SetNW2Int("TTLB_"..bpname.."HP", math.Approach(bphp, 0, info:GetDamage()))
+				end
+			end
+		else
+			local bpname, bphp = TTLB.GetBodyPartByHitgroup(ply, bpnum)
+			ply:SetNW2Int("TTLB_"..bpname.."HP", math.Approach(bphp, 0, info:GetDamage()))
+		end
 	end
 	TTLB.CheckDamages(ply)
 end
