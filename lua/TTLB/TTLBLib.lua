@@ -1,4 +1,4 @@
-TTLB = TTBL or {}
+TTLB = TTLB or {BleedEnts = {}, BleedHook = false}
 
 TTLB.BPEnums = {
 	[0] = "Generic",
@@ -32,6 +32,13 @@ TTLB.Attributes = {
 }
 
 TTLB.GenericHandlers = {
+	[1] = function(ply, info)
+		local lpos = ply:WorldToLocal(info:GetDamagePosition())
+		if lpos.z >= 64 then return {1} end
+		if lpos.z <= 35 and !ply:Crouching() then return {6, 7} end
+		return {2, 3}
+	end,
+
 	[4] = function(ply, info)
 		local atkrclass = info:GetAttacker():GetClass()
 		local swcase = {
@@ -68,11 +75,20 @@ TTLB.GenericHandlers = {
 		return {2}
 	end,
 	
+	[1024] = function(ply, info)
+		local lpos = ply:WorldToLocal(info:GetDamagePosition())
+		if lpos.z >= 64 then return {1} end
+		if lpos.z <= 35 and !ply:Crouching() then return {6, 7} end
+		return {2, 3}
+	end,
+	
 	[16384] = function() return {1, 2} end,
 	
 	[32768] = function() return {2, 3} end,
 	
 	[131072] = function() return {2, 3} end,
+	
+	[262144] = function() return {1, 2, 3, 4, 5, 6, 7} end,
 	
 	[1048576] = function() return {2, 3} end,
 }
@@ -119,6 +135,63 @@ end
 
 function TTLB.GetBloodFraction(ply)
 	return TTLB.GetBlood(ply) / TTLB.GetMaxBlood(ply)
+end
+
+function TTLB.TakeBlood(ply, amt)
+	ply:SetNW2Int("TTLB_Blood", math.Approach(TTLB.GetBlood(ply), 0, amt))
+end
+
+function TTLB.AddBlood(ply, amt)
+	ply:SetNW2Int("TTLB_Blood", math.Approach(TTLB.GetBlood(ply), TTLB.GetMaxBlood(ply), amt))
+end
+
+function TTLB.SetBlood(ply, amt)
+	ply:SetNW2Int("TTLB_Blood", amt)
+end
+
+local function HandleBleedsHook()
+	for ply, _ in pairs(TTLB.BleedEnts) do
+		for id, bleed in pairs(ply.TTLB_Bleeds) do
+			if CurTime() >= bleed.nexttick then
+				if bleed.taken < bleed.target then
+					bleed.taken = bleed.taken + 1
+					TTLB.TakeBlood(ply, 1)
+					bleed.nexttick = CurTime() + bleed.next
+				else
+					table.remove(ply.TTLB_Bleeds, id)
+					print(TTLB.GetBlood(ply))
+					if table.IsEmpty(ply.TTLB_Bleeds) then
+						TTLB.BleedEnts[ply] = nil
+					end
+					if table.IsEmpty(TTLB.BleedEnts) then
+						hook.Remove("Tick", "TTLB_HandleBleeds")
+						TTLB.BleedHook = false
+					end
+				end
+			end
+		end
+	end
+end
+
+function TTLB.ClearBleeds(ply)
+	if ply.TTLB_Bleeds then
+		for _, bleed in pairs(ply.TTLB_Bleeds) do
+			bleed.taken = bleed.target
+			bleed.nexttick = CurTime()
+		end
+	end
+end
+
+function TTLB.AddBleed(ply, time, amt)
+	if !TTLB.BleedEnts[ply] then TTLB.BleedEnts[ply] = true end
+	ply.TTLB_Bleeds = ply.TTLB_Bleeds or {}
+	table.insert(ply.TTLB_Bleeds, {
+		taken = 0,
+		target = amt,
+		next = time / amt,
+		nexttick = CurTime()
+	})
+	if !TTLB.BleedHook then hook.Add("Tick", "TTLB_HandleBleeds", HandleBleedsHook) end
 end
 
 function TTLB.DamageBodyPart(ply, bp, info, extra)

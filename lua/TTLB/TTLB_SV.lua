@@ -3,6 +3,10 @@ hook.Add("PlayerSpawn", "TTLB_InitBody", function(ply)
 	ply.TTLBAttributes = {}
 end)
 
+hook.Add("PlayerDeath", "TTLB_HandleDeath", function(ply)
+	TTLB.ClearBleeds(ply)
+end)
+
 hook.Add("EntityTakeDamage", "TTLB_HandleGenericDamage", function(ply, info)
 	if ply:IsPlayer() then
 		TTLB.DamageBodyPart(ply, 0, info)
@@ -10,8 +14,21 @@ hook.Add("EntityTakeDamage", "TTLB_HandleGenericDamage", function(ply, info)
 	end
 end)
 
+local viewpunches = {
+	[1] = Angle(10),
+	[2] = Angle(2),
+	[3] = Angle(2),
+	[4] = Angle(0, -4),
+	[5] = Angle(0, 4)
+}
+
 hook.Add("ScalePlayerDamage", "TTLB_HandleDamage", function(ply, hitgr, info, extra)
 	TTLB.DamageBodyPart(ply, hitgr, info, extra)
+	TTLB.AddBleed(ply, 5, 1000)
+	local dot = info:GetAttacker():GetForward():Dot(ply:GetForward())
+	local dir = 1
+	if dot < 0 then dir = -1 end
+	if viewpunches[hitgr] then ply:ViewPunch(viewpunches[hitgr] * dir) end
 	return true
 end)
 

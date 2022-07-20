@@ -51,8 +51,8 @@ hook.Add("HUDPaint", "TTLB_HUD", function()
 	
 		surface.DrawPoly({
 			{x = math.floor(60 + bs), y = math.floor(h - bs * aspect - 50 + (bs * aspect))},
-			{x = math.floor(60 + bs), y = math.floor(h - bs * aspect - 50 * TTLB.GetBloodFraction(LocalPlayer()) )},
-			{x = math.floor(60 + bs + (h * 0.02)), y = math.floor(h - bs * aspect - 50 * TTLB.GetBloodFraction(LocalPlayer()) )},
+			{x = math.floor(60 + bs), y = math.floor( Lerp(TTLB.GetBloodFraction(LocalPlayer()), h - bs * aspect - 50 + (bs * aspect), h - bs * aspect - 50) )},
+			{x = math.floor(60 + bs + (h * 0.02)), y = math.floor( Lerp(TTLB.GetBloodFraction(LocalPlayer()), h - bs * aspect - 50 + (bs * aspect), h - bs * aspect - 50) )},
 			{x = math.floor(60 + bs + (h * 0.02)), y = math.floor(h - bs * aspect - 50 + (bs * aspect))}
 		})
 		
