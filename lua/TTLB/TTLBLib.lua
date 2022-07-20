@@ -23,6 +23,14 @@ local HPConVars = {
 	StartBlood = 5000
 }
 
+TTLB.Attributes = {
+	DisabledLegs = {
+		OnAdd = function(ply)
+			ply:ViewPunch(Angle(10, 0, 0))
+		end
+	}
+}
+
 local BodyParts = {
 	"Head", "Chest", "Stomach", "RArm", "LArm", "RLeg", "LLeg"
 }
@@ -64,6 +72,29 @@ function TTLB.DamageBodyPart(ply, bp, info, extra)
 	TTLB.CheckDamages(ply)
 end
 
+function TTLB.HasAttribute(ply, attr)
+	return ply.TTLBAttributes[attr]
+end
+
+function TTLB.AddAttribute(ply, attr)
+	if TTLB.HasAttribute(ply, attr) then return end
+	ply.TTLBAttributes[attr] = true
+	if TTLB.Attributes[attr].OnAdd then TTLB.Attributes[attr].OnAdd(ply) end
+end
+
+function TTLB.RemoveAttribute(ply, attr)
+	ply.TTLBAttributes[attr] = nil
+	if TTLB.Attributes[attr].OnRemove then TTLB.Attributes[attr].OnRemove(ply) end
+end
+
 function TTLB.CheckDamages(ply)
-	print("Checking damages.")
+	local ghp = TTLB.GetBodyPartHealth
+	
+	if ghp(ply, "LLeg") <= 0 and ghp(ply, "RLeg") <= 0 then
+		TTLB.AddAttribute(ply, "DisabledLegs")
+	end
+	
+	if ghp(ply, "Head") <= 0 or ghp(ply, "Chest") <= 0 then
+		ply:Kill()
+	end
 end
