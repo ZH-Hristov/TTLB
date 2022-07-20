@@ -13,7 +13,7 @@ TTLB.BPEnums = {
 
 -- Default health values and starting blood level.
 local HPConVars = {
-	HeadHP = 50,
+	HeadHP = 10,
 	ChestHP = 100,
 	StomachHP = 100,
 	RArmHP = 75,
@@ -32,10 +32,49 @@ TTLB.Attributes = {
 }
 
 TTLB.GenericHandlers = {
-	[4] = function(info)
-		if info:GetAttacker():GetClass() == "npc_antlionguard" then return {1, 2, 3, 4, 5} end
+	[4] = function(ply, info)
+		local atkrclass = info:GetAttacker():GetClass()
+		local swcase = {
+			npc_antlionguard = {2, 3, 4, 5},
+			npc_headcrab = {1},
+			npc_headcrab_fast = {1},
+			npc_zombie_torso = function() 
+				if TTLB.GetBodyPartHealth(ply, "RLeg") <= 0 and TTLB.GetBodyPartHealth(ply, "LLeg") <= 0 then
+					return {1} end 
+				return {6, 7} 
+			end
+		}
+		swcase["npc_fastzombie_torso"] = swcase.npc_zombie_torso
+		if swcase[atkrclass] then return (type(swcase[atkrclass]) == "function" and swcase[atkrclass]()) or swcase[atkrclass] end
 		return {2}
-	end
+	end,
+	
+	[8] = function() return {1, 2, 3, 4, 5, 6, 7} end,
+	
+	[16] = function() return {2, 3, 6, 7} end,
+	
+	[64] = function(ply)
+		ply:SetDSP(math.random(35, 37), true)
+		return {2, 3, 4, 5, 6, 7}
+	end,
+	
+	[128] = function(ply, info)
+		local atkrclass = info:GetAttacker():GetClass()
+		local swcase = {
+			npc_antlionguard = {2, 3, 4, 5},
+			npc_hunter = {2, 3}
+		}
+		if swcase[atkrclass] then return (type(swcase[atkrclass]) == "function" and swcase[atkrclass]()) or swcase[atkrclass] end
+		return {2}
+	end,
+	
+	[16384] = function() return {1, 2} end,
+	
+	[32768] = function() return {2, 3} end,
+	
+	[131072] = function() return {2, 3} end,
+	
+	[1048576] = function() return {2, 3} end,
 }
 
 local BodyParts = {
@@ -70,11 +109,23 @@ function TTLB.GetBodyPartHealthFraction(ply, bodypart)
 	return TTLB.GetBodyPartHealth(ply, bodypart) / TTLB.GetBodyPartMaxHealth(ply, bodypart)
 end
 
+function TTLB.GetBlood(ply)
+	return ply:GetNW2Int("TTLB_Blood")
+end
+
+function TTLB.GetMaxBlood(ply)
+	return GetConVar("TTLB_StartBlood"):GetInt()
+end
+
+function TTLB.GetBloodFraction(ply)
+	return TTLB.GetBlood(ply) / TTLB.GetMaxBlood(ply)
+end
+
 function TTLB.DamageBodyPart(ply, bp, info, extra)
 	if type(bp) == "number" then bp = {bp} end
 	for _, bpnum in pairs(bp) do
 		if bpnum == 0 then
-			local genericaffected = (TTLB.GenericHandlers[info:GetDamageType()] and TTLB.GenericHandlers[info:GetDamageType()](info))
+			local genericaffected = (TTLB.GenericHandlers[info:GetDamageType()] and TTLB.GenericHandlers[info:GetDamageType()](ply, info))
 			if genericaffected then
 				for _, bpnumgeneric in pairs(genericaffected) do
 					local bpname, bphp = TTLB.GetBodyPartByHitgroup(ply, bpnumgeneric)
@@ -106,12 +157,13 @@ end
 
 function TTLB.CheckDamages(ply)
 	local ghp = TTLB.GetBodyPartHealth
+	local gbl = TTLB.GetBlood(ply)
 	
 	if ghp(ply, "LLeg") <= 0 and ghp(ply, "RLeg") <= 0 then
 		TTLB.AddAttribute(ply, "DisabledLegs")
 	end
 	
-	if ghp(ply, "Head") <= 0 or ghp(ply, "Chest") <= 0 then
+	if ghp(ply, "Head") <= 0 or ghp(ply, "Chest") <= 0 or gbl <= 0 then
 		ply:Kill()
 	end
 end

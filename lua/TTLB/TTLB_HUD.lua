@@ -29,7 +29,6 @@ for _, bpname in pairs(BodyParts) do
 end
 
 local aspect = bpmats.Head:Height() / bpmats.Head:Width()
-print(aspect)
 
 hook.Add( "HUDShouldDraw", "HideHUD", function( name )
 	if ( hide[ name ] ) then
@@ -43,5 +42,21 @@ hook.Add("HUDPaint", "TTLB_HUD", function()
 		surface.SetMaterial(bpmats[bpname])
 		surface.SetDrawColor( (hpfrac <= 0 and clr_dead) or LerpColor(hpfrac, clr_wounded, clr_healthy) )
 		surface.DrawTexturedRect(50, h - bs * aspect - 50, bs, bs * aspect)
+		
+		surface.SetDrawColor(clr_dead)
+		surface.DrawRect(60 + bs, h - bs * aspect - 50, h * 0.02, bs * aspect)
+		
+		draw.NoTexture()
+		surface.SetDrawColor(clr_wounded)
+	
+		surface.DrawPoly({
+			{x = math.floor(60 + bs), y = math.floor(h - bs * aspect - 50 + (bs * aspect))},
+			{x = math.floor(60 + bs), y = math.floor(h - bs * aspect - 50 * TTLB.GetBloodFraction(LocalPlayer()) )},
+			{x = math.floor(60 + bs + (h * 0.02)), y = math.floor(h - bs * aspect - 50 * TTLB.GetBloodFraction(LocalPlayer()) )},
+			{x = math.floor(60 + bs + (h * 0.02)), y = math.floor(h - bs * aspect - 50 + (bs * aspect))}
+		})
+		
+		surface.SetDrawColor(color_black)
+		surface.DrawOutlinedRect(60 + bs, h - bs * aspect - 50, math.Round(h * 0.02), math.ceil(bs * aspect), 2)
 	end
 end)

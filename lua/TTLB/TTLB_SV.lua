@@ -30,6 +30,7 @@ hook.Add("GetFallDamage", "TTLB_FallDamage", function(ply, speed)
 		ply:EmitSound("Flesh.Break")
 	end
 	d:SetDamage(dmg)
+	d:SetDamageType(DMG_FALL)
 	TTLB.DamageBodyPart(ply, affected, d)
 	ply:EmitSound("Flesh.ImpactHard")
 	return false
