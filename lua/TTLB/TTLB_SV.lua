@@ -2,7 +2,7 @@ hook.Add("PlayerSpawn", "TTLB_InitBody", function(ply)
 	TTLB.InitBody(ply)
 end)
 
-hook.Add("ScalePlayerDamage", "TTLB_HandleDamage", function(ply, hitrg, info, extra)
+hook.Add("ScalePlayerDamage", "TTLB_HandleDamage", function(ply, hitgr, info, extra)
 	TTLB.DamageBodyPart(ply, hitgr, info, extra)
 	return true
 end)
