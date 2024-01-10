@@ -1,4 +1,5 @@
 hook.Add("PlayerSpawn", "TTLB_InitBody", function(ply)
+	TTLB.ClearBleeds(ply)
 	TTLB.InitBody(ply)
 	ply.TTLBAttributes = {}
 end)

@@ -60,8 +60,9 @@ TTLB.GenericHandlers = {
 	
 	[16] = function() return {2, 3, 6, 7} end,
 	
-	[64] = function(ply)
+	[64] = function(ply, info)
 		ply:SetDSP(math.random(35, 37), true)
+		ply:SetVelocity(info:GetDamageForce())
 		return {2, 3, 4, 5, 6, 7}
 	end,
 	
@@ -175,10 +176,7 @@ end
 
 function TTLB.ClearBleeds(ply)
 	if ply.TTLB_Bleeds then
-		for _, bleed in pairs(ply.TTLB_Bleeds) do
-			bleed.taken = bleed.target
-			bleed.nexttick = CurTime()
-		end
+		table.Empty(ply.TTLB_Bleeds)
 	end
 end
 
